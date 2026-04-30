@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Safari</title>
+    <style>
+        :root {
+            --bg-color: #f0f8ff;
+            --card-bg: #ffffff;
+            --text-dark: #333;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            background-color: var(--bg-color);
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #ff6b6b;
+            font-size: 3rem;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ----- Setup Screen ----- */
+        #setup-screen {
+            background: white;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 5px solid #ffd54f;
+        }
+        
+        #setup-screen label {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        #setup-screen input {
+            font-size: 2.5rem;
+            width: 120px;
+            text-align: center;
+            padding: 10px;
+            border: 4px solid #ccc;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn-start {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            border: none;
+            padding: 15px 50px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* ----- Game Screen ----- */
+        #game-screen {
+            display: none;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 4px solid #e0e0e0;
+        }
+
+        .team-indicator { color: #2196F3; font-size: 2rem; }
+        .level-indicator { color: #9C27B0; }
+        
+        .timer-box {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #333;
+            background: #fff9c4;
+            padding: 10px 40px;
+            border-radius: 50px;
+            border: 4px solid #fbc02d;
+            display: inline-block;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .timer-warning {
+            color: #d32f2f;
+            border-color: #d32f2f;
+            background: #ffcdd2;
+            animation: blink 0.5s infinite alternate;
+        }
+
+        @keyframes blink {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.15); opacity: 0.8; box-shadow: 0 0 20px red; }
+        }
+
+        #lightning-tag {
+            display: none;
+            color: #ff5722;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            animation: shake 0.4s infinite alternate;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 25px;
+            padding: 10px;
+            font-size: 12rem;
+            line-height: 1.2;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            border: 6px solid #e0e0e0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: scale(1.02); }
+
+        .question-card.lightning {
+            background: linear-gradient(135deg, #fff9c4, #ffeb3b);
+            border-color: #ff9800;
+            box-shadow: 0 0 30px rgba(255, 152, 0, 0.5);
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(-2deg) scale(1); }
+            100% { transform: rotate(2deg) scale(1.05); }
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn-option {
+            background-color: white;
+            border: 5px solid #64b5f6;
+            color: #1976d2;
+            font-size: 2.5rem;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 8px rgba(0,0,0,0.1);
+            font-family: 'Comic Sans MS', sans-serif;
+        }
+
+        .btn-option:hover {
+            background-color: #e3f2fd;
+            transform: translateY(-5px);
+        }
+
+        .btn-option:active { transform: translateY(0); }
+
+        .btn-option.correct {
+            background-color: #c8e6c9;
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+
+        .btn-option.wrong {
+            background-color: #ffcdd2;
+            border-color: #f44336;
+            color: #c62828;
+            opacity: 0.8;
+        }
+
+        /* ----- Scoreboard ----- */
+        #scoreboard {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border-top: 5px solid #ccc;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+            padding: 15px 0;
+            overflow-x: auto;
+            white-space: nowrap;
+            z-index: 100;
+        }
+
+        .score-item {
+            display: inline-block;
+            background: #f5f5f5;
+            padding: 15px 25px;
+            margin: 0 10px;
+            border-radius: 15px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border: 3px solid #ddd;
+            color: #555;
+        }
+
+        .score-item.active {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            color: #1976d2;
+            transform: scale(1.05);
+        }
+
+        /* ----- Overlays & Highlight ----- */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-size: 5rem;
+            font-weight: bold;
+        }
+
+        #overlay-correct { color: #4CAF50; }
+        #overlay-wrong { color: #f44336; }
+        #overlay-intermission { background: rgba(0,0,0,0.85); color: white; }
+        
+        .points-earned { font-size: 3rem; color: #ff9800; margin-top: 10px; }
+        .sentence-show { 
+            font-size: 2.5rem; 
+            margin-top: 40px; 
+            color: #555; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* 目標單字高亮樣式：放大 3 倍與紅色粗框 */
+        .highlight-word {
+            font-size: 3em; 
+            border: 6px solid #e53935; 
+            color: #333;
+            padding: 0 15px;
+            margin: 0 15px;
+            border-radius: 10px;
+            background-color: #fff;
+            display: inline-block;
+            line-height: 1.1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .intermission-text { font-size: 4rem; margin-bottom: 20px; color: #4fc3f7; }
+        .intermission-timer { font-size: 7rem; color: #ffd54f; margin-bottom: 40px; }
+        
+        .btn-skip {
+            background-color: #ff9800;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Comic Sans MS', sans-serif;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🦁 Animal Safari 🐯</h1>
+
+    <!-- Setup -->
+    <div id="setup-screen">
+        <label for="team-count">Teams (1-26):</label>
+        <input type="number" id="team-count" min="1" max="26" value="3">
+        <br>
+        <button class="btn-start" onclick="startGame()">PLAY!</button>
+    </div>
+
+    <!-- Game -->
+    <div id="game-screen">
+        <div class="game-info">
+            <span class="level-indicator">Level <span id="level-display">1</span> (Round <span id="round-display">1</span>)</span>
+            <span class="team-indicator" id="team-display">Team A's Turn!</span>
+        </div>
+        
+        <div class="timer-box" id="timer-display">20</div>
+        <div id="lightning-tag">⚡ SUPER FAST! +10 POINTS! ⚡</div>
+
+        <div class="question-card" id="question-card" onclick="playQuestionAudio()" title="Click to listen">
+            <!-- Emoji -->
+        </div>
+
+        <div class="options-grid" id="options-grid">
+            <!-- Buttons -->
+        </div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div id="scoreboard"></div>
+
+    <!-- Overlays -->
+    <div class="overlay" id="overlay-correct">
+        <div id="correct-title">🎉 AWESOME! 🎉</div>
+        <div class="points-earned" id="correct-points">+5 Points</div>
+        <div class="sentence-show" id="correct-sentence-show"></div>
+    </div>
+
+    <div class="overlay" id="overlay-wrong">
+        <div>❌ OOPS! ❌</div>
+        <div class="points-earned">+1 Point</div>
+        <div class="sentence-show" id="wrong-sentence-show"></div>
+    </div>
+
+    <div class="overlay" id="overlay-intermission">
+        <div class="intermission-text">BREAK TIME! ⏱️</div>
+        <div class="intermission-timer" id="inter-timer">30</div>
+        <button class="btn-skip" onclick="skipIntermission()">SKIP</button>
+    </div>
+
+    <script>
+        const animalData = [
+            { eng: 'newt', emoji: '🦎', sentence: "It is a newt." },
+            { eng: 'ostrich', emoji: '🦤', sentence: "It is an ostrich." },
+            { eng: 'owl', emoji: '🦉', sentence: "It is an owl." },
+            { eng: 'pig', emoji: '🐷', sentence: "It is a pig." },
+            { eng: 'quail', emoji: '🐦', sentence: "It is a quail." },
+            { eng: 'rabbit', emoji: '🐰', sentence: "It is a rabbit." },
+            { eng: 'squirrel', emoji: '🐿️', sentence: "It is a squirrel." },
+            { eng: 'tiger', emoji: '🐯', sentence: "It is a tiger." },
+            { eng: 'unicorn', emoji: '🦄', sentence: "It is a unicorn." },
+            { eng: 'vulture', emoji: '🦅', sentence: "It is a vulture." },
+            { eng: 'wolf', emoji: '🐺', sentence: "It is a wolf." },
+            { eng: 'yak', emoji: '🦬', sentence: "It is a yak." },
+            { eng: 'zebra', emoji: '🦓', sentence: "It is a zebra." }
+        ];
+
+        let totalTeams = 3;
+        let scores = [];
+        let currentTeamIndex = 0;
+        let currentRound = 1;
+        let currentLevel = 1;
+        
+        let timerInterval;
+        let intermissionInterval;
+        let timeLeft = 20;
+        let isLightningRound = false;
+        
+        let currentQuestionAnimal = null;
+        let currentOptions = [];
+        let isAnsweringDisabled = false;
+
+        const synth = window.speechSynthesis;
+
+        function startGame() {
+            const inputCount = parseInt(document.getElementById('team-count').value);
+            if (inputCount < 1 || inputCount > 26 || isNaN(inputCount)) {
+                alert("Please enter a number from 1 to 26!");
+                return;
+            }
+            
+            totalTeams = inputCount;
+            scores = new Array(totalTeams).fill(0);
+            
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('scoreboard').style.display = 'flex';
+            
+            initScoreboard();
+            startTurn();
+        }
+
+        function initScoreboard() {
+            const board = document.getElementById('scoreboard');
+            board.innerHTML = '';
+            for (let i = 0; i < totalTeams; i++) {
+                const teamName = "Team " + String.fromCharCode(65 + i);
+                const scoreDiv = document.createElement('div');
+                scoreDiv.className = 'score-item';
+                scoreDiv.id = `score-team-${i}`;
+                scoreDiv.innerHTML = `${teamName}: <span id="score-val-${i}">0</span>`;
+                board.appendChild(scoreDiv);
+            }
+        }
+
+        function updateScoreboardUI() {
+            for (let i = 0; i < totalTeams; i++) {
+                document.getElementById(`score-val-${i}`).innerText = scores[i];
+                document.getElementById(`score-team-${i}`).classList.remove('active');
+            }
+            document.getElementById(`score-team-${currentTeamIndex}`).classList.add('active');
+        }
+
+        function startTurn() {
+            isAnsweringDisabled = false;
+            
+            isLightningRound = Math.random() < 0.2;
+
+            if (currentRound >= 7) { currentLevel = 4; timeLeft = 12; }
+            else if (currentRound >= 5) { currentLevel = 3; timeLeft = 16; }
+            else if (currentRound >= 3) { currentLevel = 2; timeLeft = 18; }
+            else { currentLevel = 1; timeLeft = 20; }
+
+            const cardElement = document.getElementById('question-card');
+            const lightningTag = document.getElementById('lightning-tag');
+
+            if (isLightningRound) {
+                timeLeft = 5; 
+                cardElement.classList.add('lightning');
+                lightningTag.style.display = 'block';
+            } else {
+                cardElement.classList.remove('lightning');
+                lightningTag.style.display = 'none';
+            }
+
+            const teamName = "Team " + String.fromCharCode(65 + currentTeamIndex);
+            document.getElementById('team-display').innerText = `${teamName}'s Turn!`;
+            document.getElementById('level-display').innerText = currentLevel;
+            document.getElementById('round-display').innerText = currentRound;
+            
+            updateScoreboardUI();
+            resetTimerUI();
+            generateQuestion();
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(null); 
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timerBox = document.getElementById('timer-display');
+            timerBox.innerText = timeLeft;
+            if (timeLeft <= 5) {
+                timerBox.classList.add('timer-warning');
+            } else {
+                timerBox.classList.remove('timer-warning');
+            }
+        }
+
+        function resetTimerUI() {
+            const timerBox = document.getElementById('timer-display');
+            timerBox.innerText = timeLeft;
+            timerBox.classList.remove('timer-warning');
+        }
+
+        function generateQuestion() {
+            const shuffledAnimals = [...animalData].sort(() => 0.5 - Math.random());
+            currentOptions = shuffledAnimals.slice(0, 4);
+            currentQuestionAnimal = currentOptions[Math.floor(Math.random() * 4)];
+            
+            document.getElementById('question-card').innerText = currentQuestionAnimal.emoji;
+            
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            
+            currentOptions.forEach((animal, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.id = `option-${index}`;
+                btn.innerText = animal.eng;
+                btn.onclick = () => handleAnswer(index);
+                grid.appendChild(btn);
+            });
+
+            playTTS(currentQuestionAnimal.eng);
+        }
+
+        function playQuestionAudio() {
+            if(currentQuestionAnimal) {
+                playTTS(currentQuestionAnimal.eng);
+            }
+        }
+
+        function handleAnswer(selectedIndex) {
+            if (isAnsweringDisabled) return;
+            isAnsweringDisabled = true;
+            clearInterval(timerInterval); 
+
+            const isCorrect = selectedIndex !== null && currentOptions[selectedIndex] === currentQuestionAnimal;
+            const correctIndex = currentOptions.indexOf(currentQuestionAnimal);
+            
+            document.getElementById(`option-${correctIndex}`).classList.add('correct');
+            if (!isCorrect && selectedIndex !== null) {
+                document.getElementById(`option-${selectedIndex}`).classList.add('wrong');
+            }
+
+            playTTS(currentQuestionAnimal.sentence);
+
+            // 產生含有 HTML 標籤的高亮句子
+            const highlightedSentence = currentQuestionAnimal.sentence.replace(
+                currentQuestionAnimal.eng, 
+                `<span class="highlight-word">${currentQuestionAnimal.eng}</span>`
+            );
+
+            if (isCorrect) {
+                let pointsToEarn = isLightningRound ? 10 : 5;
+                scores[currentTeamIndex] += pointsToEarn;
+                
+                document.getElementById('correct-title').innerText = isLightningRound ? "⚡ SUPER! ⚡" : "🎉 AWESOME! 🎉";
+                document.getElementById('correct-points').innerText = `+${pointsToEarn} Points`;
+                // 使用 innerHTML 寫入以解析 span 標籤
+                document.getElementById('correct-sentence-show').innerHTML = highlightedSentence;
+                document.getElementById('overlay-correct').style.display = 'flex';
+            } else {
+                scores[currentTeamIndex] += 1; 
+                document.getElementById('wrong-sentence-show').innerHTML = highlightedSentence;
+                document.getElementById('overlay-wrong').style.display = 'flex';
+            }
+            
+            updateScoreboardUI();
+
+            setTimeout(() => {
+                document.getElementById('overlay-correct').style.display = 'none';
+                document.getElementById('overlay-wrong').style.display = 'none';
+                proceedToNextTurn();
+            }, 2500);
+        }
+
+        function proceedToNextTurn() {
+            currentTeamIndex++;
+            if (currentTeamIndex >= totalTeams) {
+                currentTeamIndex = 0;
+                currentRound++;
+                showIntermission();
+            } else {
+                startTurn();
+            }
+        }
+
+        function showIntermission() {
+            const overlay = document.getElementById('overlay-intermission');
+            const timerDisplay = document.getElementById('inter-timer');
+            overlay.style.display = 'flex';
+            
+            let interTimeLeft = 30;
+            timerDisplay.innerText = interTimeLeft;
+
+            intermissionInterval = setInterval(() => {
+                interTimeLeft--;
+                timerDisplay.innerText = interTimeLeft;
+                if (interTimeLeft <= 0) {
+                    skipIntermission();
+                }
+            }, 1000);
+        }
+
+        function skipIntermission() {
+            clearInterval(intermissionInterval);
+            document.getElementById('overlay-intermission').style.display = 'none';
+            startTurn();
+        }
+
+        function playTTS(text) {
+            synth.cancel(); 
+            const utterThis = new SpeechSynthesisUtterance(text);
+            utterThis.lang = 'en-US';
+            utterThis.rate = 0.85; 
+            utterThis.pitch = 1.1; 
+            synth.speak(utterThis);
+        }
+    </script>
+</body>
+</html>
